@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Configuration><ViewDefinitions>
+  <View>
+    <Name>Default</Name>
+    <ViewSelectedBy>
+      <TypeName>PKTWorkspace</TypeName>
+    </ViewSelectedBy>
+    <TableControl>
+      <TableHeaders>
+        <TableColumnHeader>
+          <Label>Name</Label>
+        </TableColumnHeader>
+        <TableColumnHeader>
+          <Label>Created</Label>
+        </TableColumnHeader>
+        <TableColumnHeader>
+          <Label>LatestChange</Label>
+        </TableColumnHeader>
+        <TableColumnHeader>
+          <Label>Version</Label>
+        </TableColumnHeader>
+        <TableColumnHeader>
+          <Label>Directory</Label>
+        </TableColumnHeader>
+        <TableColumnHeader>
+          <Label>Repo</Label>
+        </TableColumnHeader>
+        <TableColumnHeader>
+          <Label>Branch</Label>
+        </TableColumnHeader>
+      </TableHeaders>
+      <TableRowEntries>
+        <TableRowEntry>
+          <TableColumnItems>
+            <TableColumnItem>
+              <PropertyName>name</PropertyName>
+            </TableColumnItem>
+            <TableColumnItem>
+              <ScriptBlock>Get-Date -Date $_.'created-at' -f d</ScriptBlock>
+            </TableColumnItem>
+            <TableColumnItem>
+              <PropertyName>latest-change-at</PropertyName>
+            </TableColumnItem>
+            <TableColumnItem>
+              <PropertyName>terraform-version</PropertyName>
+            </TableColumnItem>
+            <TableColumnItem>
+              <PropertyName>working-directory</PropertyName>
+            </TableColumnItem>
+            <TableColumnItem>
+              <PropertyName>vcs-repo-identifier</PropertyName>
+            </TableColumnItem>
+            <TableColumnItem>
+              <PropertyName>branch</PropertyName>
+            </TableColumnItem>
+          </TableColumnItems>
+        </TableRowEntry>
+      </TableRowEntries>
+    </TableControl>
+  </View>
+</ViewDefinitions>
+</Configuration>
