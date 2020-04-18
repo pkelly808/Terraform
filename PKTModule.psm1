@@ -61,7 +61,7 @@ function Get-PKTModule {
 
         [switch]$Latest,
 
-        [ValidateSet('azurerm','vsphere','infoblox','chef')]
+        [ValidateSet('aws','azurerm','google','vsphere')]
         [string]$Provider = 'azurerm',
 
         [ValidateSet('server1','server2')]
@@ -133,39 +133,5 @@ function Get-PKTModule {
         }
     }    
 }
-
-<# Need to tweak WebRequest auth to download file
-function Invoke-PKTModuleDownload {
-
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory,ValueFromPipeline,ValueFromPipelineByPropertyName)]
-        [string]$Id,
-
-        [ValidateSet('server1','server2')]
-        [string]$Server = $Global:PKTServer,
-
-        [string]$APIToken = $Global:PKTAPIToken
-    )
-
-    $Uri = "https://$Server/api/registry/v1/modules/$Id/download"
-    $Headers = @{
-        Authorization = "Bearer $APIToken"
-        'Content-Type' = 'application/vnd.api+json'
-    }
-
-    Write-Verbose "Uri $Uri"
-
-    try {
-        #Download Source Code for a Specific Module Version
-        #DefaultOrg/sql-elasticpool/azurerm/1.3.25
-        #GET	<base_url>/:namespace/:name/:provider/:version/download
-        Invoke-WebRequest -Uri $Uri -Headers $Headers -Method Get
-    } catch {
-        Write-Warning "Unable to download modules for $Id : $($_.Exception.Message) : Line $($_.InvocationInfo.ScriptLineNumber)"
-        Continue
-    }
-}
-#>
 
 Set-Alias gtm Get-PKTModule
