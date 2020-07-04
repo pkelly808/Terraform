@@ -317,7 +317,8 @@ function Set-TFWorkspaceToken {
         [Parameter(Mandatory,ValueFromPipeline,ValueFromPipelineByPropertyName)]
         [string[]]$Name,
 
-        [string]$Token = $Global:Token,
+        [Parameter(Mandatory,ValueFromPipeline,ValueFromPipelineByPropertyName)]
+        [string]$Token,
 
         [string]$Server = $Terraform.Server,
 

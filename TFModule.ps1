@@ -184,11 +184,11 @@ function Publish-TFModule {
         [ValidateSet('Bitbucket','GitHub')]
         [string]$VCS,
 
-        [string]$Server = $Global:TFServer,
-        
-        [string]$APIToken = $Global:TFAPIToken,
+        [string]$Server = $Terraform.Server,
 
-        [string]$Org = $Global:TFOrg
+        [string]$APIToken = $Terraform.Token,
+
+        [string]$Org = $Terraform.Org
     )
 
     PROCESS {
@@ -277,11 +277,11 @@ function Remove-TFModule {
         [Parameter(Mandatory,Position=1,ParameterSetName='All')]
         [switch]$All,
 
-        [string]$Server = $Global:TFServer,
-        
-        [string]$APIToken = $Global:TFAPIToken,
+        [string]$Server = $Terraform.Server,
 
-        [string]$Org = $Global:TFOrg
+        [string]$APIToken = $Terraform.Token,
+
+        [string]$Org = $Terraform.Org
     )
 
     PROCESS {
