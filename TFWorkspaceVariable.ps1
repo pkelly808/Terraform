@@ -287,59 +287,6 @@ function Set-TFWorkspaceVariable {
     }
 }
 
-function Set-TFWorkspaceToken {
-    <#
-    .SYNOPSIS
-    Update an vault token on multiple workspaces.
-
-    Uses Set-TFWorkspaceVariable cmdlet but supports multiple workspace names.
-
-    Specify the SERVER, APITOKEN and ORG within the cmdlet or use Set-Terraform to store them globally.
-    APIToken can be generated at https://<TFE>/app/settings/tokens
-
-    .DESCRIPTION
-    Set-TFWorkspaceVariable -Name $Workspace -Key vault_token -Value $Token -Server $Server -APIToken $APIToken -Org $Org
-
-    .EXAMPLE
-    Set-TFWorkspaceToken -Name workspace1,workspace2 -Token tokenstring
-
-    You will be prompted to confirm variable update.
-
-    .EXAMPLE
-    Get-TFWorkspace | select -f 2 | Set-TFWorkspaceToken -Token tokenstring -Confirm:$false
-
-    Get all workspaces, select the first two, set the token.  Confirmation prompt will be ignored.
-    #>
-
-    [CmdletBinding()]
-    Param
-    (
-        [Parameter(Mandatory,ValueFromPipeline,ValueFromPipelineByPropertyName)]
-        [string[]]$Name,
-
-        [Parameter(Mandatory,ValueFromPipeline,ValueFromPipelineByPropertyName)]
-        [string]$Token,
-
-        [string]$Server = $Terraform.Server,
-
-        [string]$APIToken = $Terraform.Token,
-
-        [string]$Org = $Terraform.Org
-    )
-
-    PROCESS {
-        
-        if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Set-Terraform"; Continue}
-        if (!$Token) {Write-Warning "Missing Token for vault_token key, use Get-CNVToken"; Continue}
-
-        foreach ($Workspace in $Name) {
-
-            Set-TFWorkspaceVariable -Name $Workspace -Key vault_token -Value $Token -Server $Server -APIToken $APIToken -Org $Org
-                
-        }
-    }
-}
-
 function Remove-TFWorkspaceVariable {
     <#
     .SYNOPSIS

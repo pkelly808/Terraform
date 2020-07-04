@@ -95,72 +95,6 @@ function Get-TFRun {
     }
 }
 
-function Start-TFRun {
-    <#
-    .SYNOPSIS
-    Create a run for a workspace.
-
-    Specify the SERVER, APITOKEN and ORG within the cmdlet or use Set-Terraform to store them globally.
-    APIToken can be generated at https://<TFE>/app/settings/tokens
-
-    .DESCRIPTION
-    Create a Run
-        POST /runs
-
-    .LINK
-    https://www.terraform.io/docs/cloud/api/run.html
-    #>
-
-    [CmdletBinding()]
-    Param
-    (
-        [Parameter(Mandatory,ValueFromPipeline,ValueFromPipelineByPropertyName)]
-        [string]$Name,
-
-        [string]$Message = 'Queued from PowerShell',
-
-        [string]$Server = $Terraform.Server,
-
-        [string]$APIToken = $Terraform.Token,
-
-        [string]$Org = $Terraform.Org
-    )
-
-    PROCESS {
-        
-        if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Set-Terraform"; Continue}
-
-        $Uri = "https://$Server/api/v2/runs"
-        $Headers = @{
-            Authorization = "Bearer $APIToken"
-            'Content-Type' = 'application/vnd.api+json'
-        }
-
-        try {
-
-            $WorkspaceId = (Get-TFWorkspace -Server $Server -APIToken $APIToken -Name $Name).id
-            Write-Verbose "Workspace $Name; WorkspaceId $WorkspaceId"
-            if (!$WorkspaceId) {Continue}
-
-            $Data = [PSCustomObject]@{
-                attributes = [PSCustomObject]@{
-                    message = $Message
-                }
-                relationships = @{workspace=@{data=@{id=$WorkspaceId}}}
-            }
-
-            $Body = @{data=$Data} | ConvertTo-Json -Depth 5
-            Write-Verbose "$Body"
-
-            Invoke-RestMethod -Uri $Uri -Headers $Headers -Body $Body -Method Post | Out-Null
-
-        } catch {
-            Write-Warning "Unable to get run : $($_.Exception.Message) : Line $($_.InvocationInfo.ScriptLineNumber)"
-            Continue
-        }
-    }
-}
-
 function Set-TFRun {
     <#
     .SYNOPSIS
@@ -224,6 +158,72 @@ function Set-TFRun {
 
         } catch {
             Write-Warning "Unable to $Action on $RunId : $($_.Exception.Message) : Line $($_.InvocationInfo.ScriptLineNumber)"
+            Continue
+        }
+    }
+}
+
+function Start-TFRun {
+    <#
+    .SYNOPSIS
+    Create a run for a workspace.
+
+    Specify the SERVER, APITOKEN and ORG within the cmdlet or use Set-Terraform to store them globally.
+    APIToken can be generated at https://<TFE>/app/settings/tokens
+
+    .DESCRIPTION
+    Create a Run
+        POST /runs
+
+    .LINK
+    https://www.terraform.io/docs/cloud/api/run.html
+    #>
+
+    [CmdletBinding()]
+    Param
+    (
+        [Parameter(Mandatory,ValueFromPipeline,ValueFromPipelineByPropertyName)]
+        [string]$Name,
+
+        [string]$Message = 'Queued from PowerShell',
+
+        [string]$Server = $Terraform.Server,
+
+        [string]$APIToken = $Terraform.Token,
+
+        [string]$Org = $Terraform.Org
+    )
+
+    PROCESS {
+        
+        if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Set-Terraform"; Continue}
+
+        $Uri = "https://$Server/api/v2/runs"
+        $Headers = @{
+            Authorization = "Bearer $APIToken"
+            'Content-Type' = 'application/vnd.api+json'
+        }
+
+        try {
+
+            $WorkspaceId = (Get-TFWorkspace -Server $Server -APIToken $APIToken -Name $Name).id
+            Write-Verbose "Workspace $Name; WorkspaceId $WorkspaceId"
+            if (!$WorkspaceId) {Continue}
+
+            $Data = [PSCustomObject]@{
+                attributes = [PSCustomObject]@{
+                    message = $Message
+                }
+                relationships = @{workspace=@{data=@{id=$WorkspaceId}}}
+            }
+
+            $Body = @{data=$Data} | ConvertTo-Json -Depth 5
+            Write-Verbose "$Body"
+
+            Invoke-RestMethod -Uri $Uri -Headers $Headers -Body $Body -Method Post | Out-Null
+
+        } catch {
+            Write-Warning "Unable to get run : $($_.Exception.Message) : Line $($_.InvocationInfo.ScriptLineNumber)"
             Continue
         }
     }
