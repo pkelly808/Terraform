@@ -90,7 +90,7 @@ function Get-TFModule {
         [int]$ResultPageSize = 20
     )
 
-    if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Set-Terraform"; Continue}
+    if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Connect-Terraform"; Continue}
         
     $Uri = "https://$Server/api/registry/v1/modules"
     $Headers = @{
@@ -193,7 +193,7 @@ function Publish-TFModule {
 
     PROCESS {
         
-        if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Set-Terraform"; Continue}
+        if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Connect-Terraform"; Continue}
 
         $Uri = "https://$Server/api/v2/registry-modules"
         $Headers = @{
@@ -286,7 +286,7 @@ function Remove-TFModule {
 
     PROCESS {
         
-        if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Set-Terraform"; Continue}
+        if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Connect-Terraform"; Continue}
 
         $Headers = @{
             Authorization = "Bearer $APIToken"

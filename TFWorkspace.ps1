@@ -57,7 +57,7 @@ function Get-TFWorkspace {
         [int]$ResultPageSize = 100
     )
 
-    if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Set-Terraform"; Continue}
+    if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Connect-Terraform"; Continue}
     
     if ($Name) {
         #Show workspace
@@ -123,15 +123,17 @@ function New-TFWorkspace {
         [Parameter(Mandatory)]
         [string]$Name,
 
+        [Parameter(Mandatory)]
+        [string]$Repo,
+
         [string]$WorkingDirectory,
 
-        [string]$Branch = 'master',
+        [string]$TerraformVersion,
 
-        [ValidateSet('Bitbucket','GitHub')]
+        [string]$Branch,
+
         [string]$VCS = 'GitHub',
-
-        [string]$Repo = 'TFE/terraform-repo',
-
+        
         [string]$Server = $Terraform.Server,
 
         [string]$APIToken = $Terraform.Token,
@@ -141,7 +143,7 @@ function New-TFWorkspace {
 
     PROCESS {
         
-        if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Set-Terraform"; Continue}
+        if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Connect-Terraform"; Continue}
 
         $Uri = "https://$Server/api/v2/organizations/$Org/workspaces"
         $Headers = @{
@@ -156,12 +158,13 @@ function New-TFWorkspace {
             $Data = @{
                 attributes = @{
                     name = $Name
+                    'resource-count' = 0
+                    'terraform_version' = $TerraformVersion
                     'working-directory' = $WorkingDirectory.ToLower()
                     'vcs-repo' = @{
                         identifier = $Repo
                         'oauth-token-id' = $OAuthToken
                         branch = $Branch
-                        'default-branch' = $true
                     }
                 }
                 type = 'workspaces'
@@ -213,7 +216,6 @@ function Set-TFWorkspace {
         
         [string]$WorkingDirectory,
 
-        [ValidateSet('Bitbucket','GitHub')]
         [string]$VCS,
 
         [string]$Repo,
@@ -229,7 +231,7 @@ function Set-TFWorkspace {
 
     PROCESS {
         
-        if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Set-Terraform"; Continue}
+        if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Connect-Terraform"; Continue}
         if ($VCS -and !$Repo) {Write-Warning "Set VCS requires Repo"; Continue}
 
         $Uri = "https://$Server/api/v2/organizations/$Org/workspaces/$Name"
@@ -271,6 +273,104 @@ function Set-TFWorkspace {
         } catch {
             Write-Warning "Unable to update $Name : $($_.Exception.Message) : Line $($_.InvocationInfo.ScriptLineNumber)"
             Continue
+        }
+    }
+}
+
+function Copy-TFWorkspace {
+    <#
+    .SYNOPSIS
+    Create a copy of a workspace.  Workspace variables are also copied.
+
+    Specify the SERVER, APITOKEN and ORG within the cmdlet or use Set-Terraform to store them globally.
+    APIToken can be generated at https://<TFE>/app/settings/tokens
+
+    .DESCRIPTION
+    Create a Workspace
+        POST /organizations/:organization_name/workspaces
+
+    .LINK
+    https://www.terraform.io/docs/cloud/api/workspaces.html
+    #>
+
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact='High')]
+    Param
+    (
+        [Parameter(Mandatory)]
+        [string]$Name,
+
+        [Parameter(Mandatory)]
+        [string]$Destination,
+       
+        [string]$Server = $Terraform.Server,
+
+        [string]$APIToken = $Terraform.Token,
+
+        [string]$Org = $Terraform.Org
+    )
+
+    PROCESS {
+        
+        if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Connect-Terraform"; Continue}
+
+        $Uri = "https://$Server/api/v2/organizations/$Org/workspaces"
+        $Headers = @{
+            Authorization = "Bearer $APIToken"
+            'Content-Type' = 'application/vnd.api+json'
+        }
+
+        try {
+
+            $Workspace = Get-TFWorkspace -Name $Name
+
+            $Data = @{
+                attributes = @{
+                    name = $Destination
+                    'resource-count' = 0
+                    'terraform_version' = $Workspace.'terraform-version'
+                    'working-directory' = $($Workspace.'working-directory').ToLower()
+                    'vcs-repo' = @{
+                        identifier = $Workspace.'vcs-repo-identifier'
+                        'oauth-token-id' = $Workspace.'vcs-repo'.'oauth-token-id'
+                        branch = $Workspace.'vcs-repo'.branch
+                    }
+                }
+                type = 'workspaces'
+            }
+
+            $Body = @{data=$Data} | ConvertTo-Json -Depth 3
+            Write-Verbose "$Body"
+
+            if ($PSCmdlet.ShouldProcess($Name)) {
+                Invoke-RestMethod -Uri $Uri -Headers $Headers -Body $Body -Method Post | Out-Null
+            }
+            
+        } catch {
+            Write-Warning "Unable to create copy $Destination : $($_.Exception.Message) : Line $($_.InvocationInfo.ScriptLineNumber)"
+            Continue
+        }
+
+        $WorkspaceVariable = Get-TFWorkspaceVariable -Name $Name
+
+        foreach ($Variable in $WorkspaceVariable) {
+
+            switch ($Variable) {
+                {$_.hcl -and $_.sensitive} {
+                    New-TFWorkspaceVariable -Name $Destination -Key $Variable.Key -Value 'bad' -Description $Variable.Description -HCL -Sensitive
+                }
+
+                {$_.hcl} {
+                    New-TFWorkspaceVariable -Name $Destination -Key $Variable.Key -Value $Variable.Value -Description $Variable.Description -HCL
+                }
+
+                {$_.sensitive} {
+                    New-TFWorkspaceVariable -Name $Destination -Key $Variable.Key -Value 'bad' -Description $Variable.Description -Sensitive
+                }
+                
+                default {
+                    New-TFWorkspaceVariable -Name $Destination -Key $Variable.Key -Value $Variable.Value -Description $Variable.Description
+                }
+            }
         }
     }
 }
@@ -320,7 +420,7 @@ function Lock-TFWorkspace {
 
     PROCESS {
         
-        if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Set-Terraform"; Continue}
+        if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Connect-Terraform"; Continue}
 
         $Headers = @{
             Authorization = "Bearer $APIToken"
@@ -401,7 +501,7 @@ function Unlock-TFWorkspace {
 
     PROCESS {
         
-        if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Set-Terraform"; Continue}
+        if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Connect-Terraform"; Continue}
 
         $Headers = @{
             Authorization = "Bearer $APIToken"
@@ -464,8 +564,7 @@ function Remove-TFWorkspace {
 
     PROCESS {
         
-        if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Set-Terraform"; Continue}
-        if (!$Token) {Write-Warning "Missing Token for vault_token key, use Get-CNVToken"; Continue}
+        if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Connect-Terraform"; Continue}
 
         $Uri = "https://$Server/api/v2/organizations/$Org/workspaces/$Name"
         $Headers = @{
@@ -489,6 +588,7 @@ function Remove-TFWorkspace {
 Set-Alias gtfw Get-TFWorkspace
 Set-Alias ntfw New-TFWorkspace
 Set-Alias stfw Set-TFWorkspace
+Set-Alias ctfw Copy-TFWorkspace
 Set-Alias lktfw Lock-TFWorkspace
 Set-Alias uktfw Unlock-TFWorkspace
 Set-Alias rtfw Remove-TFWorkspace

@@ -9,21 +9,22 @@
     <TableControl>
       <TableHeaders>
         <TableColumnHeader>
-          <Label>Name</Label>
+          <Label>name</Label>
         </TableColumnHeader>
         <TableColumnHeader>
-          <Label>Created-At</Label>
+          <Label>created-at</Label>
         </TableColumnHeader>
         <TableColumnHeader>
-        </TableColumnHeader>
-        <TableColumnHeader>
-        </TableColumnHeader>
-        <TableColumnHeader>
+          <Label>latest-change-at</Label>
         </TableColumnHeader>
         <TableColumnHeader>
         </TableColumnHeader>
         <TableColumnHeader>
-          <Label>Branch</Label>
+        </TableColumnHeader>
+        <TableColumnHeader>
+        </TableColumnHeader>
+        <TableColumnHeader>
+          <Label>branch</Label>
         </TableColumnHeader>
       </TableHeaders>
       <TableRowEntries>
@@ -36,7 +37,7 @@
               <ScriptBlock>Get-Date -Date $_.'created-at' -f d</ScriptBlock>
             </TableColumnItem>
             <TableColumnItem>
-              <PropertyName>latest-change-at</PropertyName>
+              <ScriptBlock>Get-Date -Date $_.'latest-change-at' -f 'MM/dd/yy HH:mm'</ScriptBlock>
             </TableColumnItem>
             <TableColumnItem>
               <PropertyName>terraform-version</PropertyName>
@@ -56,6 +57,54 @@
     </TableControl>
   </View>
 
+<View>
+    <Name>Default</Name>
+    <ViewSelectedBy>
+      <TypeName>Terraform.TFWorkspaceVariable</TypeName>
+    </ViewSelectedBy>
+    <TableControl>
+      <TableHeaders>
+        <TableColumnHeader>
+        </TableColumnHeader>
+        <TableColumnHeader>
+        </TableColumnHeader>
+        <TableColumnHeader>
+          <Label>created-at</Label>
+        </TableColumnHeader>
+        <TableColumnHeader>
+        </TableColumnHeader>
+        <TableColumnHeader>
+        </TableColumnHeader>
+        <TableColumnHeader>
+        </TableColumnHeader>
+      </TableHeaders>
+      <TableRowEntries>
+        <TableRowEntry>
+          <TableColumnItems>
+            <TableColumnItem>
+              <PropertyName>key</PropertyName>
+            </TableColumnItem>
+            <TableColumnItem>
+              <PropertyName>value</PropertyName>
+            </TableColumnItem>
+            <TableColumnItem>
+              <ScriptBlock>Get-Date -Date $_.'created-at' -f d</ScriptBlock>
+            </TableColumnItem>
+            <TableColumnItem>
+              <PropertyName>description</PropertyName>
+            </TableColumnItem>
+            <TableColumnItem>
+              <PropertyName>hcl</PropertyName>
+            </TableColumnItem>
+            <TableColumnItem>
+              <PropertyName>sensitive</PropertyName>
+            </TableColumnItem>
+          </TableColumnItems>
+        </TableRowEntry>
+      </TableRowEntries>
+    </TableControl>
+  </View>
+
   <View>
     <Name>Default</Name>
     <ViewSelectedBy>
@@ -68,6 +117,7 @@
         <TableColumnHeader>
         </TableColumnHeader>
         <TableColumnHeader>
+          <Label>created-at</Label>
         </TableColumnHeader>
         <TableColumnHeader>
         </TableColumnHeader>
@@ -84,7 +134,7 @@
               <PropertyName>id</PropertyName>
             </TableColumnItem>
             <TableColumnItem>
-              <PropertyName>created-at</PropertyName>
+              <ScriptBlock>Get-Date -Date $_.'created-at' -f 'MM/dd/yy HH:mm'</ScriptBlock>
             </TableColumnItem>
             <TableColumnItem>
               <PropertyName>status</PropertyName>

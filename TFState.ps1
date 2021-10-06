@@ -76,7 +76,7 @@ function Get-TFState {
 
     PROCESS {
         
-        if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Set-Terraform"; Continue}
+        if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Connect-Terraform"; Continue}
 
         $Headers = @{
             Authorization = "Bearer $APIToken"

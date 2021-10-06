@@ -14,7 +14,7 @@ function Get-TerraformConfig {
 
     end {
         if (Test-IsWindows) {
-            Join-Path -Path $env:TEMP -ChildPath "$env:USERNAME-Terraform.xml"
+            Join-Path -Path $env:APPDATA -ChildPath "$env:USERNAME-Terraform.xml"
         } else {
             Join-Path -Path $env:HOME -ChildPath '.terraform'
         }

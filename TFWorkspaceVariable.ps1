@@ -43,7 +43,7 @@ function Get-TFWorkspaceVariable {
 
     PROCESS {
         
-        if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Set-Terraform"; Continue}
+        if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Connect-Terraform"; Continue}
 
         $Uri = "https://$Server/api/v2/workspaces"
         $Headers = @{
@@ -58,9 +58,14 @@ function Get-TFWorkspaceVariable {
                 $WorkspaceId = (Get-TFWorkspace -Server $Server -APIToken $APIToken -Name $Workspace).id
                 Write-Verbose "Workspace $Workspace; WorkspaceId $WorkspaceId"
 
-                $Variables = (Invoke-RestMethod -Uri "$Uri/$WorkspaceId/vars" -Headers $Headers -Method Get).data
+                $Results = (Invoke-RestMethod -Uri "$Uri/$WorkspaceId/vars" -Headers $Headers -Method Get).data
 
-                $Variables | Select-Object id -exp attributes
+                foreach ($Result in $Results) {
+                    $Variable = $Result.Attributes
+                    $Variable.PSObject.TypeNames.Insert(0,'Terraform.TFWorkspaceVariable')
+                    $Variable | Add-Member -MemberType NoteProperty -Name id -Value $Result.id
+                    $Variable
+                }
 
             } catch {
                 Write-Warning "Unable to get a list of $Workspace variables : $($_.Exception.Message) : Line $($_.InvocationInfo.ScriptLineNumber)"
@@ -128,6 +133,8 @@ function New-TFWorkspaceVariable {
 
         [switch]$Sensitive,
 
+        [switch]$Environment,
+
         [string]$Server = $Terraform.Server,
 
         [string]$APIToken = $Terraform.Token,
@@ -137,7 +144,7 @@ function New-TFWorkspaceVariable {
 
     PROCESS {
         
-        if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Set-Terraform"; Continue}
+        if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Connect-Terraform"; Continue}
 
         $Uri = "https://$Server/api/v2/workspaces"
         $Headers = @{
@@ -154,10 +161,10 @@ function New-TFWorkspaceVariable {
             $Data = [PSCustomObject]@{
                 type = 'vars'
                 attributes = [PSCustomObject]@{
-                    key = $Key.ToLower()
-                    value = $Value.ToLower()
+                    key = $Key
+                    value = $Value
                     description = $Description.ToLower()
-                    category = 'terraform'
+                    category = if ($Environment.IsPresent) {'env'} else {'terraform'}
                     hcl = $HCL.IsPresent
                     sensitive = $Sensitive.IsPresent
                 }
@@ -245,7 +252,7 @@ function Set-TFWorkspaceVariable {
 
     PROCESS {
         
-        if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Set-Terraform"; Continue}
+        if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Connect-Terraform"; Continue}
 
         $Uri = "https://$Server/api/v2/workspaces"
         $Headers = @{
@@ -264,7 +271,7 @@ function Set-TFWorkspaceVariable {
             $Data = [PSCustomObject]@{
                 id = $Variable.id
                 attributes = [PSCustomObject]@{
-                    value = if ($Variable.sensitive) {$Value} else {$Value.ToLower()}
+                    value = $Value
                     description = if ($Description) {$Description} else {$Variable.description}
                     category = if ($Category) {$Category} else {$Variable.category}
                     hcl = if ($HCL) {$HCL.IsPresent} else {$Variable.hcl}
@@ -327,8 +334,7 @@ function Remove-TFWorkspaceVariable {
 
     PROCESS {
         
-        if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Set-Terraform"; Continue}
-        if (!$Token) {Write-Warning "Missing Token for vault_token key, use Get-CNVToken"; Continue}
+        if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Connect-Terraform"; Continue}
 
         $Uri = "https://$Server/api/v2/workspaces"
         $Headers = @{

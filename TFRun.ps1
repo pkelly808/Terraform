@@ -49,7 +49,7 @@ function Get-TFRun {
 
     PROCESS {
         
-        if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Set-Terraform"; Continue}
+        if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Connect-Terraform"; Continue}
 
         $Headers = @{
             Authorization = "Bearer $APIToken"
@@ -100,12 +100,15 @@ function Set-TFRun {
     .SYNOPSIS
     Set an ACTION for a specific Run.
 
-    Specify any of the following Actions: DISCARD, CANCEL, FORCE-CANCEL, FORCE-EXECUTE
+    Specify any of the following Actions: APPLY, DISCARD, CANCEL, FORCE-CANCEL, FORCE-EXECUTE
 
     Specify the SERVER, APITOKEN and ORG within the cmdlet or use Set-Terraform to store them globally.
     APIToken can be generated at https://<TFE>/app/settings/tokens
 
     .DESCRIPTION
+    Apply a Run
+        POST /runs/:run_id/actions/apply
+
     Discard a Run
         POST /runs/:run_id/actions/discard
 
@@ -130,7 +133,7 @@ function Set-TFRun {
         [string]$RunId,
 
         [Parameter(Mandatory)]
-        [ValidateSet('discard','cancel','force-cancel','force-execute')]
+        [ValidateSet('apply','discard','cancel','force-cancel','force-execute')]
         [string]$Action,
 
         [string]$Server = $Terraform.Server,
@@ -142,7 +145,7 @@ function Set-TFRun {
 
     PROCESS {
         
-        if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Set-Terraform"; Continue}
+        if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Connect-Terraform"; Continue}
 
         $Uri = "https://$Server/api/v2/runs/$RunId/actions/$Action"
         $Headers = @{
@@ -196,7 +199,7 @@ function Start-TFRun {
 
     PROCESS {
         
-        if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Set-Terraform"; Continue}
+        if (!$Server -or !$APIToken) {Write-Warning "Missing Server and APIToken, use Connect-Terraform"; Continue}
 
         $Uri = "https://$Server/api/v2/runs"
         $Headers = @{
